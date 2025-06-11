@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { Search, Play, Clock, ExternalLink, Loader2, ArrowUp, ArrowDown } from 'lucide-react'
+import { Search, Play, Clock, ExternalLink, Loader2, ArrowUp, ArrowDown, Copy } from 'lucide-react'
 
 interface TranscriptSegment {
   id: number
@@ -19,6 +19,7 @@ export default function HomePage() {
   const [videoId, setVideoId] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [currentSearchIndex, setCurrentSearchIndex] = useState(-1)
+  const [copySuccess, setCopySuccess] = useState(false)
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60)
@@ -125,6 +126,20 @@ export default function HomePage() {
     }
   }
 
+  const handleCopyTranscript = async () => {
+    const fullTranscript = transcript.map(segment => 
+      `[${formatTime(segment.start)}] ${segment.text}`
+    ).join('\n\n')
+
+    try {
+      await navigator.clipboard.writeText(fullTranscript)
+      setCopySuccess(true)
+      setTimeout(() => setCopySuccess(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy transcript:', err)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -183,40 +198,50 @@ export default function HomePage() {
         {/* Transcript Results */}
         {transcript.length > 0 && (
           <div className="space-y-4">
-            {/* Search Bar */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value)
-                  setCurrentSearchIndex(-1)
-                }}
-                placeholder="Search in transcript..."
-                className="w-full pl-10 pr-24 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              {searchQuery && (
-                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    {searchResultIndices.length} results
-                  </span>
-                  <button
-                    onClick={() => handleSearchNavigation('prev')}
-                    className="p-1 hover:bg-accent rounded"
-                    title="Previous result"
-                  >
-                    <ArrowUp className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => handleSearchNavigation('next')}
-                    className="p-1 hover:bg-accent rounded"
-                    title="Next result"
-                  >
-                    <ArrowDown className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
+            {/* Search Bar and Copy Button */}
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value)
+                    setCurrentSearchIndex(-1)
+                  }}
+                  placeholder="Search in transcript..."
+                  className="w-full pl-10 pr-24 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                {searchQuery && (
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {searchResultIndices.length} results
+                    </span>
+                    <button
+                      onClick={() => handleSearchNavigation('prev')}
+                      className="p-1 hover:bg-accent rounded"
+                      title="Previous result"
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleSearchNavigation('next')}
+                      className="p-1 hover:bg-accent rounded"
+                      title="Next result"
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={handleCopyTranscript}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
+                title="Copy full transcript"
+              >
+                <Copy className="h-4 w-4" />
+                {copySuccess ? 'Copied!' : 'Copy'}
+              </button>
             </div>
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
