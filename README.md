@@ -4,7 +4,7 @@ A modern, minimal web application for extracting and viewing YouTube video trans
 
 ## Live Demo
 
-The application is deployed and available at: [https://youtube-transcript.vercel.app](https://youtube-transcript.vercel.app)
+The application is deployed and available at: [https://youtube-transcript-gules.vercel.app](https://youtube-transcript-gules.vercel.app)
 
 ## Features
 
