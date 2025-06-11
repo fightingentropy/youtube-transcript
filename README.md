@@ -10,6 +10,8 @@ The application is deployed and available at: [https://youtube-transcript.vercel
 
 - 🎥 Extract transcripts from any YouTube video
 - ⏰ View timestamps with direct links to video segments  
+- 🔍 Search within transcripts with real-time filtering
+- 🎯 Navigate between search results with keyboard support
 - 🎨 Clean, minimal UI with dark theme
 - 📱 Responsive design for all devices
 - 🔗 Clickable timestamps that jump to video segments
@@ -75,8 +77,12 @@ The deployment will automatically:
 
 1. **Paste YouTube URL**: Copy any YouTube video URL and paste it into the input field
 2. **Get Transcript**: Click the "Get Transcript" button to extract the transcript
-3. **Browse Segments**: View the transcript broken down into timestamped segments
-4. **Jump to Video**: Click any timestamp to open the video at that specific time
+3. **Search Transcript**: Use the search bar to find specific text in the transcript
+   - Type to filter results in real-time
+   - Use up/down arrows to navigate between matches
+   - Matching text is highlighted in yellow
+4. **Browse Segments**: View the transcript broken down into timestamped segments
+5. **Jump to Video**: Click any timestamp to open the video at that specific time
 
 ### Supported URL Formats
 

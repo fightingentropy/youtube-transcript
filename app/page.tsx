@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Search, Play, Clock, ExternalLink, Loader2 } from 'lucide-react'
+import React, { useState, useMemo } from 'react'
+import { Search, Play, Clock, ExternalLink, Loader2, ArrowUp, ArrowDown } from 'lucide-react'
 
 interface TranscriptSegment {
   id: number
@@ -17,6 +17,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [videoId, setVideoId] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [currentSearchIndex, setCurrentSearchIndex] = useState(-1)
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60)
@@ -29,6 +31,55 @@ export default function HomePage() {
     return `https://www.youtube.com/watch?v=${videoId}&t=${startSeconds}s`
   }
 
+  // Filter and highlight search results
+  const filteredTranscript = useMemo(() => {
+    if (!searchQuery.trim()) return transcript
+
+    const query = searchQuery.toLowerCase()
+    return transcript.filter(segment => 
+      segment.text.toLowerCase().includes(query)
+    )
+  }, [transcript, searchQuery])
+
+  // Get all search result indices
+  const searchResultIndices = useMemo(() => {
+    if (!searchQuery.trim()) return []
+    
+    const query = searchQuery.toLowerCase()
+    return transcript
+      .map((segment, index) => segment.text.toLowerCase().includes(query) ? index : -1)
+      .filter(index => index !== -1)
+  }, [transcript, searchQuery])
+
+  // Handle search navigation
+  const handleSearchNavigation = (direction: 'next' | 'prev') => {
+    if (searchResultIndices.length === 0) return
+
+    let newIndex = currentSearchIndex
+    if (direction === 'next') {
+      newIndex = currentSearchIndex === -1 ? 0 : (currentSearchIndex + 1) % searchResultIndices.length
+    } else {
+      newIndex = currentSearchIndex === -1 ? searchResultIndices.length - 1 : (currentSearchIndex - 1 + searchResultIndices.length) % searchResultIndices.length
+    }
+
+    setCurrentSearchIndex(newIndex)
+    const targetIndex = searchResultIndices[newIndex]
+    const element = document.getElementById(`segment-${targetIndex}`)
+    element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+
+  // Highlight matching text
+  const highlightText = (text: string) => {
+    if (!searchQuery.trim()) return text
+
+    const parts = text.split(new RegExp(`(${searchQuery})`, 'gi'))
+    return parts.map((part, i) => 
+      part.toLowerCase() === searchQuery.toLowerCase() ? 
+        <span key={i} className="bg-yellow-200 dark:bg-yellow-800">{part}</span> : 
+        part
+    )
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!videoUrl.trim()) return
@@ -36,6 +87,8 @@ export default function HomePage() {
     setLoading(true)
     setError('')
     setTranscript([])
+    setSearchQuery('')
+    setCurrentSearchIndex(-1)
 
     try {
       console.log('Sending request to API with URL:', videoUrl)
@@ -130,16 +183,57 @@ export default function HomePage() {
         {/* Transcript Results */}
         {transcript.length > 0 && (
           <div className="space-y-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setCurrentSearchIndex(-1)
+                }}
+                placeholder="Search in transcript..."
+                className="w-full pl-10 pr-24 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              {searchQuery && (
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {searchResultIndices.length} results
+                  </span>
+                  <button
+                    onClick={() => handleSearchNavigation('prev')}
+                    className="p-1 hover:bg-accent rounded"
+                    title="Previous result"
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handleSearchNavigation('next')}
+                    className="p-1 hover:bg-accent rounded"
+                    title="Next result"
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
-              <span>{transcript.length} segments found</span>
+              <span>{filteredTranscript.length} segments found</span>
             </div>
 
             <div className="space-y-3">
-              {transcript.map((segment) => (
+              {filteredTranscript.map((segment) => (
                 <div
                   key={segment.id}
-                  className="transcript-segment p-4 bg-card border border-border rounded-lg hover:bg-accent/50 transition-colors"
+                  id={`segment-${segment.id}`}
+                  className={`transcript-segment p-4 bg-card border border-border rounded-lg hover:bg-accent/50 transition-colors ${
+                    currentSearchIndex !== -1 && searchResultIndices[currentSearchIndex] === segment.id
+                      ? 'ring-2 ring-primary'
+                      : ''
+                  }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0">
@@ -155,7 +249,7 @@ export default function HomePage() {
                     </div>
                     <div className="flex-1">
                       <p className="text-foreground leading-relaxed">
-                        {segment.text}
+                        {highlightText(segment.text)}
                       </p>
                     </div>
                   </div>
