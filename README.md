@@ -2,6 +2,10 @@
 
 A modern, minimal web application for extracting and viewing YouTube video transcripts with clickable timestamps. Built with Next.js, React, and Tailwind CSS with a sleek design inspired by Perplexity.
 
+## Live Demo
+
+The application is deployed and available at: [https://youtube-transcript.vercel.app](https://youtube-transcript.vercel.app)
+
 ## Features
 
 - 🎥 Extract transcripts from any YouTube video
@@ -20,17 +24,52 @@ A modern, minimal web application for extracting and viewing YouTube video trans
 
 ### Installation
 
-1. Install dependencies:
+1. Clone the repository:
+```bash
+git clone https://github.com/fightingentropy/youtube-transcript.git
+cd youtube-transcript
+```
+
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-2. Run the development server:
+3. Run the development server:
 ```bash
 npm run dev
 ```
 
-3. Open [http://localhost:3000](http://localhost:3000) in your browser
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+### Production Build
+
+To create a production build:
+
+```bash
+npm run build
+npm start
+```
+
+## Deployment
+
+This project is deployed on Vercel. To deploy your own version:
+
+1. Fork this repository
+2. Create a Vercel account at [vercel.com](https://vercel.com)
+3. Install Vercel CLI:
+```bash
+npm install -g vercel
+```
+4. Deploy:
+```bash
+vercel
+```
+
+The deployment will automatically:
+- Build your Next.js application
+- Deploy it to Vercel's global edge network
+- Set up automatic deployments for future pushes to your main branch
 
 ## How to Use
 
