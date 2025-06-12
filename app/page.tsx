@@ -20,6 +20,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [currentSearchIndex, setCurrentSearchIndex] = useState(-1)
   const [copySuccess, setCopySuccess] = useState(false)
+  const [warningMessage, setWarningMessage] = useState('')
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60)
@@ -87,6 +88,7 @@ export default function HomePage() {
 
     setLoading(true)
     setError('')
+    setWarningMessage('')
     setTranscript([])
     setSearchQuery('')
     setCurrentSearchIndex(-1)
@@ -115,12 +117,27 @@ export default function HomePage() {
         setTranscript(data.transcript)
         setVideoId(data.videoId)
         console.log('Transcript set successfully:', data.transcript.length, 'segments')
+        
+        // Show success message
+        setWarningMessage(`✅ Successfully extracted ${data.transcript.length} transcript segments`)
       } else {
         setError('No transcript found for this video')
       }
     } catch (err) {
       console.error('Error in handleSubmit:', err)
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      if (err instanceof Error) {
+        if (err.message.includes('Transcript is not available')) {
+          setError('This video does not have a transcript available. Try a different video.')
+        } else if (err.message.includes('Video is unavailable')) {
+          setError('This video is unavailable or private. Please check the URL.')
+        } else if (err.message.includes('Invalid YouTube URL')) {
+          setError('Please enter a valid YouTube video URL.')
+        } else {
+          setError(err.message)
+        }
+      } else {
+        setError('An unexpected error occurred while fetching the transcript.')
+      }
     } finally {
       setLoading(false)
     }
@@ -191,7 +208,14 @@ export default function HomePage() {
         {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-            <p className="text-destructive-foreground">{error}</p>
+            <p className="text-destructive-foreground font-medium">❌ {error}</p>
+          </div>
+        )}
+
+        {/* Warning/Success Message */}
+        {warningMessage && (
+          <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <p className="text-green-700 dark:text-green-300">{warningMessage}</p>
           </div>
         )}
 
@@ -221,6 +245,7 @@ export default function HomePage() {
                       onClick={() => handleSearchNavigation('prev')}
                       className="p-1 hover:bg-accent rounded"
                       title="Previous result"
+                      disabled={searchResultIndices.length === 0}
                     >
                       <ArrowUp className="h-4 w-4" />
                     </button>
@@ -228,6 +253,7 @@ export default function HomePage() {
                       onClick={() => handleSearchNavigation('next')}
                       className="p-1 hover:bg-accent rounded"
                       title="Next result"
+                      disabled={searchResultIndices.length === 0}
                     >
                       <ArrowDown className="h-4 w-4" />
                     </button>
@@ -246,7 +272,12 @@ export default function HomePage() {
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
-              <span>{filteredTranscript.length} segments found</span>
+              <span>{filteredTranscript.length} segments {searchQuery ? 'found' : 'available'}</span>
+              {searchQuery && transcript.length !== filteredTranscript.length && (
+                <span className="text-yellow-600 dark:text-yellow-400">
+                  (filtered from {transcript.length} total)
+                </span>
+              )}
             </div>
 
             <div className="space-y-3">

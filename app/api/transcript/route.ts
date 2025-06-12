@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Innertube } from 'youtubei.js'
+import { setupErrorSuppression, handleYouTubeError } from '../../../lib/error-handler'
+
+// Setup error suppression for non-fatal YouTube.js errors
+setupErrorSuppression()
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,8 +41,33 @@ export async function POST(request: NextRequest) {
 
     // Fetch video info and transcript
     console.log('API: Fetching video info and transcript for video ID:', videoId)
-    const info = await youtube.getInfo(videoId)
-    const transcriptData = await info.getTranscript()
+    
+    let info, transcriptData
+    let nonFatalWarnings: string[] = []
+    
+    try {
+      info = await youtube.getInfo(videoId)
+      transcriptData = await info.getTranscript()
+    } catch (error: any) {
+      const errorResult = handleYouTubeError(error)
+      
+      if (errorResult.isWarning && !errorResult.isError) {
+        // Non-fatal error, log warning and continue
+        console.log(`API: Warning - ${errorResult.message}`)
+        nonFatalWarnings.push(errorResult.message)
+        
+        // Try to continue with the operation
+        if (!info) {
+          throw new Error('Unable to fetch video information due to API changes')
+        }
+        if (!transcriptData) {
+          transcriptData = await info.getTranscript()
+        }
+      } else {
+        // Fatal error, rethrow with enhanced message
+        throw new Error(errorResult.message)
+      }
+    }
     
     console.log('API: Transcript data received:', !!transcriptData)
     
@@ -68,26 +97,47 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    console.log('API: Successfully processed transcript with', formattedTranscript.length, 'segments')
+
     return NextResponse.json({
       success: true,
       transcript: formattedTranscript,
-      videoId
+      videoId,
+      warnings: nonFatalWarnings.length > 0 ? nonFatalWarnings : undefined
     })
     
   } catch (error) {
     console.error('Error fetching transcript:', error)
     
-    if (error instanceof Error) {
-      if (error.message.includes('Transcript is disabled')) {
-        return NextResponse.json(
-          { error: 'Transcript is not available for this video' },
-          { status: 404 }
-        )
-      }
+    const errorResult = handleYouTubeError(error)
+    
+    if (errorResult.message.includes('Transcript is not available') ||
+        errorResult.message.includes('No transcript available')) {
+      return NextResponse.json(
+        { 
+          error: errorResult.message,
+          suggestion: errorResult.suggestion 
+        },
+        { status: 404 }
+      )
+    }
+    
+    if (errorResult.message.includes('Video is unavailable') ||
+        errorResult.message.includes('Private video')) {
+      return NextResponse.json(
+        { 
+          error: errorResult.message,
+          suggestion: errorResult.suggestion 
+        },
+        { status: 404 }
+      )
     }
     
     return NextResponse.json(
-      { error: 'Failed to fetch transcript' },
+      { 
+        error: errorResult.message,
+        suggestion: errorResult.suggestion
+      },
       { status: 500 }
     )
   }

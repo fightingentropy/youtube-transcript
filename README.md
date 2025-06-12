@@ -1,165 +1,219 @@
 # YouTube Transcript Viewer
 
-A modern, minimal web application for extracting and viewing YouTube video transcripts with clickable timestamps. Built with Next.js, React, and Tailwind CSS with a sleek design inspired by Perplexity.
+A modern Next.js application that extracts and displays YouTube video transcripts with advanced search functionality and clickable timestamps.
 
-## Live Demo
+![YouTube Transcript Viewer](https://img.shields.io/badge/Built%20with-Next.js%2014-black) ![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue) ![Tailwind CSS](https://img.shields.io/badge/Styled%20with-Tailwind%20CSS-38B2AC)
 
-The application is deployed and available at: [https://youtube-transcript-gules.vercel.app](https://youtube-transcript-gules.vercel.app)
+## ✨ Features
 
-## Features
+- **Extract YouTube Transcripts**: Get transcripts from any YouTube video with available captions
+- **Advanced Search**: Search through transcript text with highlighting and navigation
+- **Clickable Timestamps**: Jump to specific moments in the video
+- **Copy Functionality**: Copy the entire transcript or specific segments
+- **Responsive Design**: Works on desktop and mobile devices
+- **Error Handling**: Robust error handling for various edge cases
+- **Dark Mode Support**: Automatic dark/light theme switching
 
-- 🎥 Extract transcripts from any YouTube video
-- ⏰ View timestamps with direct links to video segments  
-- 🔍 Search within transcripts with real-time filtering
-- 🎯 Navigate between search results with keyboard support
-- 🎨 Clean, minimal UI with dark theme
-- 📱 Responsive design for all devices
-- 🔗 Clickable timestamps that jump to video segments
-- ⚡ Fast and efficient transcript processing
-
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ installed on your machine
-- npm or yarn package manager
+- Node.js 18+ 
+- npm or yarn
 
 ### Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/fightingentropy/youtube-transcript.git
+git clone <your-repo-url>
 cd youtube-transcript
 ```
 
 2. Install dependencies:
 ```bash
 npm install
+# or
+yarn install
 ```
 
 3. Run the development server:
 ```bash
 npm run dev
+# or
+yarn dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Production Build
+## 📋 Usage
 
-To create a production build:
+1. **Paste a YouTube URL** in the input field (supports various formats):
+   - `https://www.youtube.com/watch?v=VIDEO_ID`
+   - `https://youtu.be/VIDEO_ID`
+   - `VIDEO_ID` (just the 11-character ID)
 
-```bash
-npm run build
-npm start
-```
+2. **Click "Get Transcript"** to extract the transcript
 
-## Deployment
+3. **Search through the transcript** using the search bar
 
-This project is deployed on Vercel. To deploy your own version:
+4. **Navigate search results** using the arrow buttons
 
-1. Fork this repository
-2. Create a Vercel account at [vercel.com](https://vercel.com)
-3. Install Vercel CLI:
-```bash
-npm install -g vercel
-```
-4. Deploy:
-```bash
-vercel
-```
+5. **Click timestamps** to open the video at that specific time
 
-The deployment will automatically:
-- Build your Next.js application
-- Deploy it to Vercel's global edge network
-- Set up automatic deployments for future pushes to your main branch
+6. **Copy the transcript** using the copy button
 
-## How to Use
+## 🛠️ Technical Details
 
-1. **Paste YouTube URL**: Copy any YouTube video URL and paste it into the input field
-2. **Get Transcript**: Click the "Get Transcript" button to extract the transcript
-3. **Search Transcript**: Use the search bar to find specific text in the transcript
-   - Type to filter results in real-time
-   - Use up/down arrows to navigate between matches
-   - Matching text is highlighted in yellow
-4. **Browse Segments**: View the transcript broken down into timestamped segments
-5. **Jump to Video**: Click any timestamp to open the video at that specific time
+### Architecture
 
-### Supported URL Formats
+- **Frontend**: Next.js 14 with TypeScript and Tailwind CSS
+- **Backend**: Next.js API routes
+- **YouTube Integration**: `youtubei.js` library for accessing YouTube's private API
 
-- `https://www.youtube.com/watch?v=VIDEO_ID`
-- `https://youtu.be/VIDEO_ID`
-- `https://www.youtube.com/embed/VIDEO_ID`
-- Direct video ID: `VIDEO_ID`
+### Key Components
 
-## Technology Stack
+- `app/page.tsx` - Main React component with transcript display and search
+- `app/api/transcript/route.ts` - API endpoint for extracting transcripts
+- `lib/error-handler.ts` - Centralized error handling for YouTube.js errors
 
-- **Frontend**: Next.js 14, React 18, TypeScript
-- **Styling**: Tailwind CSS with custom design system
-- **Icons**: Lucide React
-- **Transcript Extraction**: youtube-transcript library
-- **API**: Next.js API routes
+### Error Handling
 
-## Project Structure
+The application includes robust error handling for common issues:
 
-```
-youtube-transcript/
-├── app/
-│   ├── api/transcript/
-│   │   └── route.ts          # API endpoint for transcript extraction
-│   ├── globals.css           # Global styles and theme
-│   ├── layout.tsx           # Root layout component
-│   └── page.tsx             # Main application page
-├── lib/
-│   └── utils.ts             # Utility functions
-├── package.json
-├── tailwind.config.js
-├── tsconfig.json
-└── README.md
-```
+#### Non-Fatal Errors (Handled Gracefully)
+- **CompositeVideoPrimaryInfo not found**: YouTube API structure changes that don't affect functionality
+- **CourseProgressView not found**: Similar parser warnings
+- **MerchandiseShelf errors**: Layout parsing issues
 
-## API Reference
+#### Fatal Errors (User-Facing)
+- **Transcript not available**: Video doesn't have captions
+- **Video unavailable**: Private, deleted, or restricted videos
+- **Invalid URL**: Malformed YouTube URLs
+- **Network errors**: Connection issues
 
-### POST /api/transcript
+## 🔧 Troubleshooting
 
-Extracts transcript from a YouTube video.
+### Common Issues
 
-**Request Body:**
-```json
-{
-  "videoUrl": "https://www.youtube.com/watch?v=VIDEO_ID"
-}
-```
+#### 1. "CompositeVideoPrimaryInfo not found" Error
+**Status**: ✅ **Resolved** - This is a non-fatal error that has been suppressed.
 
-**Response:**
-```json
-{
-  "success": true,
-  "transcript": [
-    {
-      "id": 0,
-      "text": "Welcome to the video...",
-      "start": 0.0,
-      "duration": 3.5,
-      "end": 3.5
-    }
-  ],
-  "videoId": "VIDEO_ID"
-}
-```
+**What it means**: YouTube changes their internal structure frequently, causing parser warnings in the `youtubei.js` library.
 
-## Limitations
+**Solution**: The application now suppresses these warnings while maintaining full functionality.
 
-- Only works with videos that have transcripts enabled
-- Transcript availability depends on the video uploader's settings
-- Some videos may have auto-generated transcripts only
+#### 2. "Transcript is not available"
+**Causes**:
+- Video doesn't have auto-generated captions
+- Captions are disabled by the creator
+- Video is too new (captions not generated yet)
 
-## Contributing
+**Solutions**:
+- Try a different video
+- Check if the video has captions on YouTube
+- Wait if the video is very recent
+
+#### 3. "Video is unavailable or restricted"
+**Causes**:
+- Private video
+- Age-restricted content
+- Deleted video
+- Geographic restrictions
+
+**Solutions**:
+- Ensure the video is public
+- Try a different video
+- Check if you can access the video directly on YouTube
+
+#### 4. Network or Loading Issues
+**Causes**:
+- Slow internet connection
+- YouTube API rate limiting
+- Server overload
+
+**Solutions**:
+- Check your internet connection
+- Wait a moment and try again
+- Try a different video
+
+### Advanced Troubleshooting
+
+#### Enable Debug Logging
+To see detailed API logs, check the browser's developer console (F12) and the terminal where you're running the development server.
+
+#### Rate Limiting
+If you encounter rate limiting:
+- Wait a few minutes between requests
+- Use different video URLs
+- Restart the development server
+
+## 🔄 Recent Updates
+
+### Error Handling Improvements
+- ✅ Suppressed non-fatal YouTube.js parser errors
+- ✅ Enhanced error messages with suggestions
+- ✅ Added warning system for non-critical issues
+- ✅ Improved user feedback with success messages
+
+### UI/UX Enhancements
+- ✅ Better error message formatting
+- ✅ Success confirmation when transcript is extracted
+- ✅ Improved search result navigation
+- ✅ Enhanced accessibility features
+
+## 🧪 Testing
+
+To test the application with various scenarios:
+
+### Working Videos (Public with transcripts)
+- TED Talks
+- Educational content
+- Most popular YouTube videos
+
+### Expected Failures
+- Private videos
+- Videos without captions
+- Age-restricted content
+
+## 📦 Dependencies
+
+### Main Dependencies
+- `next`: ^14.0.3 - React framework
+- `youtubei.js`: ^14.0.0 - YouTube API client
+- `react`: ^18.2.0 - UI library
+- `tailwindcss`: ^3.3.5 - CSS framework
+- `lucide-react`: ^0.294.0 - Icons
+
+### Development Dependencies
+- `typescript`: ^5.2.2
+- `@types/node`, `@types/react`, `@types/react-dom`
+- `eslint`, `eslint-config-next`
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+2. Create a feature branch: `git checkout -b feature/new-feature`
+3. Commit your changes: `git commit -am 'Add new feature'`
+4. Push to the branch: `git push origin feature/new-feature`
+5. Submit a pull request
 
-## License
+## 📄 License
 
-This project is open source and available under the MIT License. 
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## ⚠️ Disclaimer
+
+This project uses YouTube's private API through the `youtubei.js` library. While this is generally stable, it may occasionally break when YouTube updates their internal systems. The application includes error handling to gracefully manage these situations.
+
+## 🆘 Support
+
+If you encounter issues:
+
+1. Check the troubleshooting section above
+2. Look at the browser console for error messages
+3. Check the terminal output for server-side errors
+4. Open an issue on GitHub with detailed error information
+
+---
+
+**Built with ❤️ using Next.js, TypeScript, and Tailwind CSS** 
